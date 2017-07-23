@@ -30,6 +30,8 @@
   NSAttributedString *_pendingAttributedText;
 
   UITextRange *_previousSelectionRange;
+  NSUInteger _previousTextLength;
+  CGFloat _previousContentHeight;
   NSString *_predictedText;
 
   BOOL _blockTextShouldChange;
@@ -502,8 +504,19 @@ static BOOL findMismatch(NSString *first, NSString *second, NSRange *firstRange,
     return;
   }
 
+  NSUInteger textLength = textView.text.length;
+  CGFloat contentHeight = textView.contentSize.height;
+  if (textLength >= _previousTextLength) {
+    contentHeight = MAX(contentHeight, _previousContentHeight);
+  }
+  _previousTextLength = textLength;
+  _previousContentHeight = contentHeight;
   _onChange(@{
     @"text": self.text,
+    @"contentSize": @{
+      @"height": @(contentHeight),
+      @"width": @(textView.contentSize.width)
+    },
     @"target": self.reactTag,
     @"eventCount": @(_nativeEventCount),
   });
